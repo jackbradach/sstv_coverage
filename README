@@ -1,21 +1,59 @@
+What's all this, then?
+----------------------
+This is a follow-on project to the SSTV decoder I wrote in Verilog.  I wrote it
+for a pre-silicon verification class I took at Portland State University.  It
+successfully convinced the instructor to let me use my last term project as the basis
+for the "show that you know how to do verification" project he wanted.  It also
+gave me an excuse to go back and make sure the SSTV decoder worked as well as I
+though it did.
+
+How's that work?
+----------------
+What we're doing here is using Icarus Verilog to compile both the SSTV
+design and the testbenches meant to bring them through all their states.
+I'm making use of the Open Verification Library (OVL) to make assertions
+on what the design should or should not be doing.  The end result is a
+report showing any test failures and providing coverage analysis.
+
+Wait, we're covering what now?
+------------------------------
+Coverage Analysis.  It's important because it's shows exactly how
+much of the design is being hit by your testbench.  Untested areas
+may contain bugs and it's a good idea to shake them out while you're
+still in the simulation phase.  This is the exact same concept as
+coverage analysis for software, by the way.
+
+Cool!  Let's do it!  What's the magic phrase to build everything?
+-----------------------------------------------------------------
+You may have noticed there isn't a Makefile.  That's damn peculiar and
+I don't have a good reason for it being missing.  I'll get around
+to writing one (most likely with a Dockerfile to set up the env)
+if anyone'll find it useful for this, but you can go ahead and just cut
+and paste the steps below verbatim.
+
+Except for this first step.  This first step you gotta do yourself:
+-------------------------------------------------------------------
 First download the Open Verification Library and untar to ./std_ovl:
 http://accellera.org/images/downloads/standards/ovl/std_ovl_v2p8.1_Apr2014.tgz
 
-To compile everything:
-
+Compile Verilog:
+----------------
 iverilog sstv_pixel_tb.v sstv_pixel.v -I std_ovl -o sstv_pixel_tb
 iverilog sstv_vis_tb.v sstv_vis.v -I std_ovl -o sstv_vis_tb
 iverilog sstv_cal_tb.v sstv_cal.v -I std_ovl -o sstv_cal_tb
 iverilog -Istd_ovl sstv_tb.v sstv.v sstv_vis.v sstv_pixel.v sstv_cal.v
 
-To generate coverage:
-
+Generate Coverage Data:
+-----------------------
 covered score -I std_ovl -v sstv_vis_tb.v -v sstv_vis.v -i sstv_vis_tb.SSTV_VIS -t sstv_vis -vcd sstv_vis.vcd -o sstv_vis.cdd
 covered score -I std_ovl -v sstv_cal_tb.v -v sstv_cal.v -i sstv_cal_tb.SSTV_CAL -t sstv_cal -vcd sstv_cal.vcd -o sstv_cal.cdd
 covered score -I std_ovl -v sstv_pixel_tb.v -v sstv_pixel.v -i sstv_pixel_tb.SSTV_PIXEL -t sstv_pixel -vcd sstv_pixel.vcd -o sstv_pixel.cdd
 covered score -I std_ovl -v sstv_tb.v -v sstv_vis.v -v sstv_pixel.v -v sstv.v -v sstv_cal.v -i sstv_tb.SSTV -t sstv -vcd sstv.vcd -o sstv.cdd
 
+Merge Coverage Data:
+--------------------
 covered merge *.cdd -o sstv_merged.cdd
 
-To create report:
+create Report:
+--------------
 covered report -d d -o sstv_merged.cov sstv_merged.cdd
