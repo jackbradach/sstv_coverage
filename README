@@ -1,0 +1,21 @@
+First download the Open Verification Library and untar to ./std_ovl:
+http://accellera.org/images/downloads/standards/ovl/std_ovl_v2p8.1_Apr2014.tgz
+
+To compile everything:
+
+iverilog sstv_pixel_tb.v sstv_pixel.v -I std_ovl -o sstv_pixel_tb
+iverilog sstv_vis_tb.v sstv_vis.v -I std_ovl -o sstv_vis_tb
+iverilog sstv_cal_tb.v sstv_cal.v -I std_ovl -o sstv_cal_tb
+iverilog -Istd_ovl sstv_tb.v sstv.v sstv_vis.v sstv_pixel.v sstv_cal.v
+
+To generate coverage:
+
+covered score -I std_ovl -v sstv_vis_tb.v -v sstv_vis.v -i sstv_vis_tb.SSTV_VIS -t sstv_vis -vcd sstv_vis.vcd -o sstv_vis.cdd
+covered score -I std_ovl -v sstv_cal_tb.v -v sstv_cal.v -i sstv_cal_tb.SSTV_CAL -t sstv_cal -vcd sstv_cal.vcd -o sstv_cal.cdd
+covered score -I std_ovl -v sstv_pixel_tb.v -v sstv_pixel.v -i sstv_pixel_tb.SSTV_PIXEL -t sstv_pixel -vcd sstv_pixel.vcd -o sstv_pixel.cdd
+covered score -I std_ovl -v sstv_tb.v -v sstv_vis.v -v sstv_pixel.v -v sstv.v -v sstv_cal.v -i sstv_tb.SSTV -t sstv -vcd sstv.vcd -o sstv.cdd
+
+covered merge *.cdd -o sstv_merged.cdd
+
+To create report:
+covered report -d d -o sstv_merged.cov sstv_merged.cdd
