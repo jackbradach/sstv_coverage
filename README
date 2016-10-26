@@ -28,32 +28,80 @@ Cool!  Let's do it!  What's the magic phrase to build everything?
 You may have noticed there isn't a Makefile.  That's damn peculiar and
 I don't have a good reason for it being missing.  I'll get around
 to writing one (most likely with a Dockerfile to set up the env)
-if anyone'll find it useful for this, but you can go ahead and just cut
-and paste the steps below verbatim.
+if anyone'll find it useful for this.  Until then, I made it so
+you can just cut and paste the blocks of steps verbatim and it
+ought to work.
 
-Except for this first step.  This first step you gotta do yourself:
--------------------------------------------------------------------
-First download the Open Verification Library and untar to ./std_ovl:
+Oh dang, that's a lot of steps. I got errands to run.
+-----------------------------------------------------
+There's also an example coverage report in sstv_merged.cov and a quick
+breakdown at the end of this README.
+
+Alright, maybe I'll do the whole thing, maybe I'm gonna just read.
+------------------------------------------------------------------
+You're gonna do what you're gonna do.  Maybe first you download the
+Open Verification Library and untar to ./std_ovl:
+
 http://accellera.org/images/downloads/standards/ovl/std_ovl_v2p8.1_Apr2014.tgz
 
 Compile Verilog:
 ----------------
-iverilog sstv_pixel_tb.v sstv_pixel.v -I std_ovl -o sstv_pixel_tb
-iverilog sstv_vis_tb.v sstv_vis.v -I std_ovl -o sstv_vis_tb
-iverilog sstv_cal_tb.v sstv_cal.v -I std_ovl -o sstv_cal_tb
-iverilog -Istd_ovl sstv_tb.v sstv.v sstv_vis.v sstv_pixel.v sstv_cal.v
+iverilog sstv_pixel_tb.v sstv_pixel.v -I std_ovl -o sstv_pixel_tb && \
+iverilog sstv_vis_tb.v sstv_vis.v -I std_ovl -o sstv_vis_tb && \
+iverilog sstv_cal_tb.v sstv_cal.v -I std_ovl -o sstv_cal_tb && \
+iverilog -Istd_ovl sstv_tb.v sstv.v sstv_vis.v sstv_pixel.v sstv_cal.v -o sstv_tb
+
+Generate VCDs (may take awhile as you are simulating the logic):
+----------------------------------------------------------------
+./sstv_pixel_tb && \
+./sstv_vis_tb && \
+./sstv_cal_tb && \
+./sstv_tb
 
 Generate Coverage Data:
 -----------------------
-covered score -I std_ovl -v sstv_vis_tb.v -v sstv_vis.v -i sstv_vis_tb.SSTV_VIS -t sstv_vis -vcd sstv_vis.vcd -o sstv_vis.cdd
-covered score -I std_ovl -v sstv_cal_tb.v -v sstv_cal.v -i sstv_cal_tb.SSTV_CAL -t sstv_cal -vcd sstv_cal.vcd -o sstv_cal.cdd
-covered score -I std_ovl -v sstv_pixel_tb.v -v sstv_pixel.v -i sstv_pixel_tb.SSTV_PIXEL -t sstv_pixel -vcd sstv_pixel.vcd -o sstv_pixel.cdd
+covered score -I std_ovl -v sstv_pixel_tb.v -v sstv_pixel.v -i sstv_pixel_tb.SSTV_PIXEL -t sstv_pixel -vcd sstv_pixel.vcd -o sstv_pixel.cdd && \
+covered score -I std_ovl -v sstv_vis_tb.v -v sstv_vis.v -i sstv_vis_tb.SSTV_VIS -t sstv_vis -vcd sstv_vis.vcd -o sstv_vis.cdd && \
+covered score -I std_ovl -v sstv_cal_tb.v -v sstv_cal.v -i sstv_cal_tb.SSTV_CAL -t sstv_cal -vcd sstv_cal.vcd -o sstv_cal.cdd && \
 covered score -I std_ovl -v sstv_tb.v -v sstv_vis.v -v sstv_pixel.v -v sstv.v -v sstv_cal.v -i sstv_tb.SSTV -t sstv -vcd sstv.vcd -o sstv.cdd
 
 Merge Coverage Data:
 --------------------
 covered merge *.cdd -o sstv_merged.cdd
 
-create Report:
+Create Report:
 --------------
 covered report -d d -o sstv_merged.cov sstv_merged.cdd
+
+Alright, so what does the coverage report tell me?
+--------------------------------------------------
+First check General Information and make sure all the files you think were tested
+are part of the report.
+
+The first results section is "Line Coverage."  This is the percentage of lines in the
+design that the testbench was able to hit.  For mine, the testbenches did a pretty
+decent job, 91% on the calibration module, 97% for the block that handles video intervals,
+and 100% on the pixel generator.  You're also provided with the lines your testbench missed.
+In this case, my test bench should add a case that intentionally provides bad data to
+cause the state machine to go back to SSTV_CAL_IDLE.
+
+The next section is "Toggle Coverage."  It's not enough to simply hit every line in
+a design to be able to say you tested it; you need to force it through as many states
+as possible.  The goal is to make sure every signal has been seen toggling at least
+once in simulation.  For mine, cal_tb needs to test the rollover from 7fffh->0 and it looks
+like I may not be testing some of the frequencies in the other modules.
+
+"Combinatorial Logic Coverage" shows which valid combo-logic states that it never saw.
+I'm going to defer to the Covered manual (http://covered.sourceforge.net/user/chapter.reading.html)
+on how to interpret the notation used in this section.  It's showing the expressions that it
+thinks are valid and which ones you actually hit.
+
+A note about verification; in a small design you can achieve 100% coverage.  This gets progressively
+harder the larger your design grows.  After a certain point, there are too many state combinations
+to effectively simulate everything together.  My advice is to first have a test-bench for each block
+which can more effectively address the local state space.  A test bench for a module level is also
+a good idea, but you may have to resort to fuzz-testing of signals; even if you can't hit 100% coverage
+you can build confidence that it'll work as advertised through random stimulus.
+
+
+
