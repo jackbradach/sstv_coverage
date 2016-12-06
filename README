@@ -60,10 +60,18 @@ Generate VCDs (may take awhile as you are simulating the logic):
 
 Generate Coverage Data:
 -----------------------
-covered score -I std_ovl -v sstv_pixel_tb.v -v sstv_pixel.v -i sstv_pixel_tb.SSTV_PIXEL -t sstv_pixel -vcd sstv_pixel.vcd -o sstv_pixel.cdd && \
-covered score -I std_ovl -v sstv_vis_tb.v -v sstv_vis.v -i sstv_vis_tb.SSTV_VIS -t sstv_vis -vcd sstv_vis.vcd -o sstv_vis.cdd && \
-covered score -I std_ovl -v sstv_cal_tb.v -v sstv_cal.v -i sstv_cal_tb.SSTV_CAL -t sstv_cal -vcd sstv_cal.vcd -o sstv_cal.cdd && \
-covered score -I std_ovl -v sstv_tb.v -v sstv_vis.v -v sstv_pixel.v -v sstv.v -v sstv_cal.v -i sstv_tb.SSTV -t sstv -vcd sstv.vcd -o sstv.cdd
+covered score -I std_ovl -v sstv_pixel_tb.v -v sstv_pixel.v \
+              -i sstv_pixel_tb.SSTV_PIXEL -t sstv_pixel \
+              -vcd sstv_pixel.vcd -o sstv_pixel.cdd \
+&& covered score -I std_ovl -v sstv_vis_tb.v -v sstv_vis.v \
+              -i sstv_vis_tb.SSTV_VIS -t sstv_vis -vcd sstv_vis.vcd \
+              -o sstv_vis.cdd \
+&& covered score -I std_ovl -v sstv_cal_tb.v -v sstv_cal.v \
+              -i sstv_cal_tb.SSTV_CAL -t sstv_cal -vcd sstv_cal.vcd \
+              -o sstv_cal.cdd \
+&& covered score -I std_ovl -v sstv_tb.v -v sstv_vis.v \
+                 -v sstv_pixel.v -v sstv.v -v sstv_cal.v \
+                 -i sstv_tb.SSTV -t sstv -vcd sstv.vcd -o sstv.cdd
 
 Merge Coverage Data:
 --------------------
@@ -96,12 +104,12 @@ I'm going to defer to the Covered manual (http://covered.sourceforge.net/user/ch
 on how to interpret the notation used in this section.  It's showing the expressions that it
 thinks are valid and which ones you actually hit.
 
-A note about verification; in a small design you can achieve 100% coverage.  This gets progressively
-harder the larger your design grows.  After a certain point, there are too many state combinations
-to effectively simulate everything together.  My advice is to first have a test-bench for each block
-which can more effectively address the local state space.  A test bench for a module level is also
-a good idea, but you may have to resort to fuzz-testing of signals; even if you can't hit 100% coverage
-you can build confidence that it'll work as advertised through random stimulus.
+A note about verification; in a small design you can achieve 100% coverage.  This gets
+progressively harder the larger your design grows.  After a certain point, there are
+too many state combinations to effectively simulate everything together.  My advice is
+to first have a test-bench for each block which can more effectively address the local
+state space.  A test bench for a module level is also a good idea, but you may have to
+resort to fuzz-testing of signals; even if you can't hit 100% coverage you can build
+confidence that it'll work as advertised through random stimulus.
 
-
-
+- Jack
